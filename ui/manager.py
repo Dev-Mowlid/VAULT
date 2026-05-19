@@ -159,7 +159,7 @@ class ManagerScreen(tk.Frame):
         entries = get_all_entries(self.password)
         for i in range(len(entries)):
             entry = entries[i]
-            self.contents(i,entry["service"], entry["username"],entry["password"] )
+            self.contents(entry["service"], entry["username"],entry["password"] )
 
 
         self.entry_field.columnconfigure(0, weight=0)
@@ -168,7 +168,7 @@ class ManagerScreen(tk.Frame):
         self.searchbar.columnconfigure(1, weight=1)
 
     
-    def contents(self,row, service, username, password):
+    def contents(self, service, username, password):
 
         fields = tk.Frame(
             self.entry_field,
@@ -180,25 +180,35 @@ class ManagerScreen(tk.Frame):
 
         )
         fields.pack(fill="x", pady=10,padx=100,)
+        fields.expanded = False
 
-        tk.Label(
+        def toggle(e, f=fields, p=password):
+            self.toggle_entry(f,p)
+
+        fields.bind("<Button-1>", toggle)
+
+        serv = tk.Label(
             fields,
             text=service,
             font=("Georgia", 16, "bold"),
             fg="#FFFFF8",
             bg="#1A1A1A"
-        ).grid(row=2, column=0, sticky="w",ipady=5)
+        )
+        serv.grid(row=2, column=0, sticky="w",ipady=5)
+        serv.bind("<Button-1>", toggle)
 
-        tk.Label(
+        name = tk.Label(
             fields,
             text=username,
             font=("Georgia", 9),
             bg="#1A1A1A",
             fg="#666666"
 
-        ).grid(row=3, column=0, sticky="w", ipady=5)
+        )
+        name.grid(row=3, column=0, sticky="w", ipady=5)
+        name.bind("<Button-1>", toggle)
 
-        copy = self.makebtn(fields, "copy", self.submit)
+        copy = self.makebtn(fields, "copy", command=None)
         copy.grid(row=2, column=1, sticky="e",ipady=9, ipadx=9)
 
  
@@ -206,19 +216,22 @@ class ManagerScreen(tk.Frame):
         fields.columnconfigure(1, weight=0)
 
     
-    def submit(self):
-        pass
+    def toggle_entry(self,fields, password):
+        if fields.expanded:
+            fields.extra.destroy()
+            fields.expanded = False
+        else:
+            fields.extra = tk.Frame(fields, bg="#1A1A1A")
+            fields.extra.grid(row=4, column=0,columnspan=2,sticky="ew")
+            tk.Label(fields.extra, text=password,  font=("Georgia", 16, "bold"),fg="#FFFFF8",bg="#1A1A1A").pack(side="left")
+            delete = self.makebtn(fields.extra, "delete", command=None)
+            delete.config(fg="#E05C5C",activebackground="#2A1010", activeforeground="#E05C5C")
+            delete.pack(side="right", ipady=9, ipadx=9)
+
+            fields.expanded = True
 
 
     def entrywin(self):
-        w = 700
-        h = 900
-
-        screen_w = self.parent.winfo_width()
-        screen_h = self.parent.winfo_height()
-
-        x = (screen_w - w) // 2
-        y = (screen_h - h) // 2
 
         self.popup = tk.Toplevel(
             self,
@@ -290,6 +303,16 @@ class ManagerScreen(tk.Frame):
         self.popup.resizable(False,False)
         self.popup.transient(self)
         self.popup.grab_set()
+        self.popup.update_idletasks()
+
+        w = 700
+        h = 900
+
+        screen_w = self.popup.winfo_screenwidth()
+        screen_h = self.popup.winfo_screenheight()
+
+        x = (screen_w - w) // 2
+        y = (screen_h - h) // 2
         self.popup.geometry(f"{w}x{h}+{x}+{y}")
 
     
@@ -335,7 +358,7 @@ class ManagerScreen(tk.Frame):
         entries = get_all_entries(self.password)
 
         for i , entry in enumerate(entries):
-            self.contents(i,entry["service"], entry["username"],entry["password"] )
+            self.contents(entry["service"], entry["username"],entry["password"] )
 
     
     def paswd_gen(self):

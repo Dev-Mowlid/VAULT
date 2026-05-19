@@ -69,3 +69,7 @@ node_modules/
 # =========================
 tmp/
 temp/
+
+# HASH FILES and BIN FILES
+*.hash 
+*.bin
