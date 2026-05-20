@@ -143,7 +143,7 @@ class ManagerScreen(tk.Frame):
             anchor="center"
 
         ).grid(row=0, column=0, padx=(0,20))
-        entry = tk.Entry(
+        self.search_entry = tk.Entry(
             self.controls,
             width=60,
             font=("Courier", 11),
@@ -153,13 +153,14 @@ class ManagerScreen(tk.Frame):
             relief="flat",
             bd=0,
         )
-        entry.grid(row=0, column=1, ipady=12,sticky="w")
+        self.search_entry.grid(row=0, column=1, ipady=12,sticky="w")
         tk.Frame(self.searchbar,  bg="#2A2A2A", height=3).pack(fill="x", pady=15)
 
+        self.search_entry.bind("<KeyRelease>", self.search)
+
         entries = get_all_entries(self.password)
-        for i in range(len(entries)):
-            entry = entries[i]
-            self.contents(entry["service"], entry["username"],entry["password"] )
+        for entry in entries:
+            self.contents(entry)
 
 
         self.entry_field.columnconfigure(0, weight=0)
@@ -168,7 +169,12 @@ class ManagerScreen(tk.Frame):
         self.searchbar.columnconfigure(1, weight=1)
 
     
-    def contents(self, service, username, password):
+    def contents(self, entry):
+
+        service = entry["service"]
+        username = entry["username"]
+        password = entry["password"]
+        entry_id = entry["id"]
 
         fields = tk.Frame(
             self.entry_field,
@@ -182,8 +188,8 @@ class ManagerScreen(tk.Frame):
         fields.pack(fill="x", pady=10,padx=100,)
         fields.expanded = False
 
-        def toggle(e, f=fields, p=password):
-            self.toggle_entry(f,p)
+        def toggle(e, f=fields, p=password, eid=entry_id):
+            self.toggle_entry(f,p,eid)
 
         fields.bind("<Button-1>", toggle)
 
@@ -209,6 +215,7 @@ class ManagerScreen(tk.Frame):
         name.bind("<Button-1>", toggle)
 
         copy = self.makebtn(fields, "copy", command=None)
+        copy.config(command= lambda text=password: copy_to_clipboard(text=text) )
         copy.grid(row=2, column=1, sticky="e",ipady=9, ipadx=9)
 
  
@@ -216,19 +223,23 @@ class ManagerScreen(tk.Frame):
         fields.columnconfigure(1, weight=0)
 
     
-    def toggle_entry(self,fields, password):
+    def toggle_entry(self,fields, password, eid):
         if fields.expanded:
             fields.extra.destroy()
             fields.expanded = False
         else:
             fields.extra = tk.Frame(fields, bg="#1A1A1A")
             fields.extra.grid(row=4, column=0,columnspan=2,sticky="ew")
-            tk.Label(fields.extra, text=password,  font=("Georgia", 16, "bold"),fg="#FFFFF8",bg="#1A1A1A").pack(side="left")
+            password_field = tk.Label(fields.extra, text=password,  font=("Georgia", 16, "bold"),fg="#FFFFF8",bg="#1A1A1A").pack(side="left")
             delete = self.makebtn(fields.extra, "delete", command=None)
-            delete.config(fg="#E05C5C",activebackground="#2A1010", activeforeground="#E05C5C")
+            delete.config(fg="#E05C5C",activebackground="#2A1010", activeforeground="#E05C5C", command=lambda id=eid: self.delete_row(id))
             delete.pack(side="right", ipady=9, ipadx=9)
 
             fields.expanded = True
+
+    def delete_row(self, entry_id):
+        delete_entry(self.password, entry_id=entry_id)
+        self.refresh()
 
 
     def entrywin(self):
@@ -351,14 +362,26 @@ class ManagerScreen(tk.Frame):
         self.entry3.delete(0,tk.END)
         self.refresh()
 
-    
-    def refresh(self):
+    def search(self,event=None):
+        term = self.search_entry.get().lower()
+        entries = get_all_entries(self.password)
+        filtred = [entry for entry in entries if term in entry["service"].lower() or term in entry["username"].lower() or term in entry["password"].lower() ]
         for widget in self.entry_field.winfo_children():
             widget.destroy()
-        entries = get_all_entries(self.password)
 
-        for i , entry in enumerate(entries):
-            self.contents(entry["service"], entry["username"],entry["password"] )
+        for i, entry in enumerate(filtred):
+            self.contents(entry=entry)
+
+
+    
+    def refresh(self):
+        self.search()
+        # for widget in self.entry_field.winfo_children():
+        #     widget.destroy()
+        # entries = get_all_entries(self.password)
+
+        # for i,entry in enumerate(entries):
+        #     self.contents(entry=entry)
 
     
     def paswd_gen(self):
@@ -369,10 +392,9 @@ class ManagerScreen(tk.Frame):
 
 
     def lock_vault(self):
-        self.destroy()
         self.on_lock()
 
-
+    
 
 
 

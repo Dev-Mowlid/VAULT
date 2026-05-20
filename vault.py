@@ -1,5 +1,6 @@
 import os 
 import json
+import uuid
 from cryptography.fernet import Fernet
 from auth import derive_key
 
@@ -34,21 +35,20 @@ def save_vault(passwd, entries):
 def add_entry(passwd, service, username, password):
 
     entries = load_vault(passwd)
-    entries.append({"service":service, "username": username, "password":password})
+    entries.append({"id":str(uuid.uuid4()),"service":service, "username": username, "password":password})
     save_vault(passwd, entries)
 
 
-def delete_entry(passwd, index):
+def delete_entry(passwd, entry_id):
 
-    if not isinstance(index, int) or isinstance(index, bool):
-        raise TypeError(f"Index must be integer, got {type(index).__name__}.")
+    if not isinstance(entry_id, str) or not entry_id.strip():
+        raise TypeError(f"Entry id must be a non_empty string, got {type(entry_id).__name__}.")
 
     entries = load_vault(passwd)
-    if index < 0 or index >= len(entries):
-        raise IndexError(f"Index {index} is out of range, vault has {len(entries)} entries.")
 
-    del entries[index]
-    save_vault(passwd, entries)
+    updated = [entry for entry in entries if entry["id"] != entry_id]
+
+    save_vault(passwd, updated)
     
 def get_all_entries(passwd):
     return load_vault(passwd)
