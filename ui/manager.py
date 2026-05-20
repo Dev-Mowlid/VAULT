@@ -89,7 +89,7 @@ class ManagerScreen(tk.Frame):
         tk.Label(
             self.sideframe,
             text="🔒 VAULT",
-            font=("Georgia", 12, "bold"),
+            font=("Segoe UI Emoji", 13, "bold"),
             fg="#C8F04F",
             bg="#1a1a1a",
             anchor="w"
@@ -109,7 +109,8 @@ class ManagerScreen(tk.Frame):
         btn = self.makebtn(self.sideframe,"+ Add entry", command=self.entrywin)
         btn.pack(fill="x", ipady=14, pady=(5,0))
         tk.Frame(self.sideframe, bg="#1a1a1a").pack(fill="both", expand=True)
-        btn1 = self.makebtn(self.sideframe,"🔒 Lock vault", command=self.lock_vault)
+        btn1 = self.makebtn(self.sideframe,"🔏 Lock vault", command=self.lock_vault)
+        btn1.config(font=("Segoe UI Emoji", 13, "bold"))
         btn1.pack(fill="x", ipady=14, pady=(5,0))
 
 
@@ -250,6 +251,7 @@ class ManagerScreen(tk.Frame):
             padx=2,
             pady=2,
         )
+        self.popup.title("Add Entry")
 
 
         self.pophighlight = tk.Frame(
@@ -285,6 +287,16 @@ class ManagerScreen(tk.Frame):
         self.entry1 =self.make_entry("SERVICE")
         self.entry2 =self.make_entry("USERNAME")
         self.entry3 =self.make_entry("PASSWORD")
+
+        self.msg = tk.Label(
+            self.pophighlight,
+            text="",
+            font=("Courier", 9),
+            fg="#e05c5c",
+            bg="#1A1A1A",
+            anchor="center"
+        )
+        self.msg.pack(fill="x", pady=(12,0))
         
         
 
@@ -355,11 +367,15 @@ class ManagerScreen(tk.Frame):
 
 
     def saveEntry(self):
+        if not self.entry1.get().strip() or not self.entry2.get().strip() or not self.entry3.get().strip():
+            self.show_error("Fields cant be empty!")
+            return
         add_entry(self.password, self.entry1.get(), self.entry2.get(), self.entry3.get())
 
         self.entry1.delete(0,tk.END)
         self.entry2.delete(0,tk.END)
         self.entry3.delete(0,tk.END)
+        self.msg.config(text="")
         self.refresh()
 
     def search(self,event=None):
@@ -371,17 +387,14 @@ class ManagerScreen(tk.Frame):
 
         for i, entry in enumerate(filtred):
             self.contents(entry=entry)
+    
+    def show_error(self, massage):
+        self.msg.config(text=massage)
 
 
     
     def refresh(self):
         self.search()
-        # for widget in self.entry_field.winfo_children():
-        #     widget.destroy()
-        # entries = get_all_entries(self.password)
-
-        # for i,entry in enumerate(entries):
-        #     self.contents(entry=entry)
 
     
     def paswd_gen(self):

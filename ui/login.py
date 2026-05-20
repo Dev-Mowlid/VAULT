@@ -3,7 +3,7 @@ import tkinter.ttk
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from auth import *
+from auth import setup_masterpasswd, verify_masterpasswd, derive_key, is_first_run
 
 
 class LoginScreen(tk.Frame):
@@ -129,6 +129,9 @@ class LoginScreen(tk.Frame):
                 return
             if p1 != p2:
                 self.show_error("password dont match!.")
+                return
+            if len(p1) < 8:
+                self.show_error("Password is weak!")
                 return
             setup_masterpasswd(p1)
             self.show_success("Vault created!")

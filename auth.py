@@ -12,6 +12,8 @@ SALT_FILE = "salt.bin"
 def setup_masterpasswd(passwd):
     if os.path.exists(HASH_FILE) and os.path.exists(SALT_FILE):
         raise RuntimeError("Vault already exits.")
+    if len(passwd) < 8:
+        raise Exception("Password not strong!") 
 
     hashed = bcrypt.hashpw(passwd.encode(), bcrypt.gensalt())
     with open(HASH_FILE, "wb") as f:
